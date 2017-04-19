@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>Detección de Comunidades | Fran Navarro</title>
+        <link href="../static/css/main.css" rel="stylesheet" type="text/css" />
+        <script src="../static/js/jquery-1.11.1.min.js"></script>
+        <script src="../static/js/build/jgraph.min.js"></script>
+    </head>
+    <body>
+        <div class="graph"></div>
+        <div class="label"></div>
+        <div class="description">
+            <h1>Búsqueda de Comunidades</h1>
+            <p>
+                El grafo representa las amistades de un club de kárate, cada nodo corresponde con una persona y un enlace
+                entre dos nodos expresa una realción de amistad. Queremos determinar cuantos círculos de amistad existen,
+                estudiando las propiedades de la red.
+            </p>
+            <p>
+                <select name="Algoritmos" size=5>
+                   <option selected value="0"> Elige un algoritmo </option>
+                       <optgroup label="Listas de enlaces">
+                       <option id="lovaina" value="1">Lovaina</option>
+                   </optgroup>
+                   <optgroup label="Dendograma">
+                       <option id="greedy" value="10">Greedy Newman</option>
+                   </optgroup>
+                </select>
+            </p>
+        </div>
+
+        <script type="text/javascript">
+            jgraph.create('.graph', {directed: false});
+            $.getJSON('../static/json/miserables.json', function (graph) {
+                jgraph.draw(graph);
+            });
+
+            // Show name of node on hover
+            var onEnter, onExit, $d, hovered;
+            $d = $('.label');
+            $d.hide();
+            hovered = jgraph.makeMaterial(0xb7ecff);
+            onEnter = function (node) {
+                $d.html('<p><b>' + node.name + '</b></p>');
+                $d.show();
+                node.defaultMaterial = node.material;
+                node.material = hovered;
+            };
+            onExit = function (node) {
+                $d.empty();
+                $d.hide();
+                node.material = node.defaultMaterial;
+            };
+            jgraph.onNodeHover(onEnter, onExit);
+
+            // Move the text showing name along with the mouse
+            $(document).mousemove(function (event) {
+                $d.css({ left: event.pageX + 10, top: event.pageY + 10 });
+            });
+
+            $('#greedy').click(function () {
+                $.getJSON('../static/json/miserables.json', function (graph) {
+                    jgraph.clear();
+                    jgraph.draw(graph);
+                });
+            });
+            $('#lovaina').click(function () {
+                $.getJSON('../static/json/miserables2.json', function (graph) {
+                    jgraph.clear();
+                    jgraph.draw(graph);
+                });
+            });
+        </script>
+    </body>
+</html>
