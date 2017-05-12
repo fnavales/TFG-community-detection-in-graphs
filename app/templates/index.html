@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF8">
+    <title>Búsqueda de Comunidades | Fran Navarro</title>
+
+    <script type="text/javascript" src="../static/js/vis.min.js"></script>
+    <script type="text/javascript" src="../static/js/vis-network.min.js"></script>
+    <script type="text/javascript" src="../static/js/gephiParser.js"></script>
+    <script type="text/javascript" src="../static/js/exampleUtil.js"></script>
+
+    <link href="../static/css//vis.min.css" rel="stylesheet" type="text/css"/>
+    <link href="../static/css//vis-network.min.css" rel="stylesheet" type="text/css"/>
+    <link href="../static/css//main.css" rel="stylesheet" type="text/css"/>
+</head>
+
+<body>
+
+<h2>Detección de comunidades en redes complejas</h2>
+
+<div style="width:700px; font-size:14px; text-align: justify;">
+    Selecciona un algortimo de entre los implementados para detectar comunidades.
+    <br/>
+</div>
+
+<p>
+    <!--<label><input type="checkbox" id="fixed" checked="checked"/> Fix in place after import.</label><br>-->
+    <!--<label><input type="checkbox" id="parseColor"/> Parse the color instead of-->
+    <!--copy (adds borders, highlights etc.)</label>-->
+    <select onclick="updateIndex()" id="algGroup" name="Algoritmos" size=4>
+
+        <option selected id="alg0" value="0">Lovaina</option>
+        <option id="alg1" value="1">Greedy -> Newman</option>
+        <option id="alg2" value="2">Edge Betweenness -> Girvan-Newman</option>
+        <option id="alg3" value="3">Label Propagation</option>
+
+    </select>
+</p>
+
+<div id="mynetwork"></div>
+<div class="nodeContent">
+    <h4>Comunidades:</h4>
+    <pre id="communities">
+    </pre>
+    <h4>Metadatos Nodo:</h4>
+    <pre id="nodeContent"></pre>
+</div>
+
+<script type="text/javascript">
+
+    var network;
+
+    var nodes = new vis.DataSet();
+    var edges = new vis.DataSet();
+    var gephiImported;
+    var selected = 0;
+    var algGroup = document.getElementById('algGroup')
+
+    var parsed = vis.network.gephiParser.parseGephi({{json | tojson}},{
+        fixed: false,
+            parseColor: true
+        }
+    );
+
+    nodes.add(parsed.nodes);
+    edges.add(parsed.edges);
+
+
+    //    function updateIndex() {
+    //        selected = algGroup.selectedIndex;
+    //        loadJSON('../static/data/red'+selected+'.json', redrawAll, function (err) {
+    //            console.log('error')
+    //        });
+    //        console.log("../static/data/red"+selected+".json");
+    //    }
+
+    //    var fixedCheckbox = document.getElementById('fixed');
+    //    fixedCheckbox.onchange = redrawAll;
+
+    //    var parseColorCheckbox = document.getElementById('parseColor');
+    //    parseColorCheckbox.onchange = redrawAll;
+
+    var nodeContent = document.getElementById('nodeContent');
+    var communitiesContent = document.getElementById('communities');
+
+    //    loadJSON('../static/data/red'+selected+'.json', redrawAll, function (err) {
+    //        console.log('error')
+    //    });
+
+    var container = document.getElementById('mynetwork');
+    var data = {
+        nodes: nodes,
+        edges: edges
+    };
+    var options = {
+        nodes: {
+            shape: 'dot',
+            scaling: {
+                label: {
+                    min: 1,
+                    max: 30
+                }
+            },
+        },
+        edges: {
+            width: 0.15,
+            smooth: {
+                type: 'continuous'
+            }
+        },
+        interaction: {
+            tooltipDelay: 200,
+            hideEdgesOnDrag: true
+        },
+        physics: {
+            stabilization: false,
+            barnesHut: {
+                gravitationalConstant: -10000,
+                springConstant: 0.002,
+                springLength: 150
+            }
+        }
+    };
+
+    network = new vis.Network(container, data, options);
+    network.on('click', function (params) {
+        if (params.nodes.length > 0) {
+            var data = nodes.get(params.nodes[0]); // get the data from selected node
+            nodeContent.innerHTML = JSON.stringify(data, undefined, 3); // show the data in the div
+        }
+    })
+
+    getCommunityData();
+
+    function getCommunityData() {
+        var communities = [];
+        nodes.forEach(function (element) {
+            if (communities.includes(element["color"])) {
+
+            } else {
+                communities.push(element["color"]);
+            }
+        });
+        var html = "";
+        communities.forEach(function (c, i) {
+           html += '<span style="background:'+c+'">&nbsp;&nbsp;</span> Comunidad '+ i +' <br><br>';
+        });
+        communitiesContent.innerHTML = html + "Número de comunidades: " + communities.length;
+    }
+    /**
+     * This function fills the DataSets. These DataSets will update the network.
+     */
+    //    function redrawAll(gephiJSON) {
+    //        if (gephiJSON.nodes === undefined) {
+    //            gephiJSON = gephiImported;
+    //        }
+    //        else {
+    //            gephiImported = gephiJSON;
+    //        }
+    //
+    //        nodes.clear();
+    //        edges.clear();
+    //
+    ////        var fixed = fixedCheckbox.checked;
+    ////        var parseColor = parseColorCheckbox.checked;
+    //
+    //        var parsed = vis.network.gephiParser.parseGephi(gephiJSON, {
+    //            fixed: false,
+    //            parseColor: true
+    //        });
+    //
+    //        // add the parsed data to the DataSets.
+    //        nodes.add(parsed.nodes);
+    //        edges.add(parsed.edges);
+    //
+    //        var communities = [];
+    //        nodes.forEach(function(element) {
+    //
+    //            if (communities.includes(element["color"])){
+    //
+    //            }else{
+    //                communities.push(element["color"]);
+    //            }
+    //        });
+    //        console.log(communities);
+    //        communitiesContent.innerHTML = "Número de comunidades: " + communities.length + "<br>Colores: " + communities;
+    //
+    //        var data = nodes.get(108); // get the data from node 2 as example
+    //        nodeContent.innerHTML = JSON.stringify(data, undefined, 3); // show the data in the div
+    //        network.fit(); // zoom to fit
+    //    }
+
+</script>
+
+
+</body>
+</html>
