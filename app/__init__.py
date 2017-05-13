@@ -1,21 +1,34 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, request, send_from_directory, jsonify
 import json
 from igraph import *
+import pymongo
+from werkzeug import secure_filename
+from config import ALLOWED_EXTENSIONS, APP_STATIC
 
 # Define the WSGI application object
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = APP_STATIC
+
+# Create mongo object
+client = pymongo.MongoClient()
+db = client.TFG
+actualDB = None
 
 # Configurations
 app.config.from_object('config')
 
 @app.route('/')
 def main():
-    with open('app/gameT.json', 'r') as data:
-        jsonToPython = json.load(data,'ascii')
-    print jsonToPython
+    # with open('app/gameT.json', 'rb') as data:
+    #     jsonToPython = json.load(data)
 
-    return render_template("index.html", json = jsonToPython)#, nodes = jsonToPython["nodes"], edges = jsonToPython["edges"])
+    if (actualDB):
+        data = db.networks.find_one({'name':actualDB})["data"]
+    else:
+        return redirect(url_for('upload_file'))
+
+    return render_template("index.html", json = data) #
 
 @app.route('/alg/<int:index>')
 def alg(index):
@@ -75,9 +88,42 @@ def not_found(error):
     return render_template('404.html'), 404
 
 
-# if __name__ == "__main__":
-# 	app.run(port=5000, debug=True)
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
+@app.route('/load', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            save_file(file)
+            # file.save(os.path.join(APP_STATIC, filename))
+            # return redirect(url_for('uploaded_file', filename=filename))
+            return redirect(url_for('main'))
+    else:
+        datasets = db.networks.find({},{"_id":0,"name":1})
+    return render_template("load_file.html", ds=datasets)
+
+@app.route('/setDB/<filename>')
+def setDefaultDB(filename):
+    global actualDB
+    if ('.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS):
+        actualDB = secure_filename(filename)
+        print actualDB
+        return redirect(url_for('main'))
+    return redirect(url_for('upload_file'))
+
+def save_file(file):
+    # Save network as a MongoDB file
+    added =  db.networks.update_one(
+        {'name': secure_filename(file.filename)},
+        {'$set': {'data': json.load(file)}},
+        upsert = True  # Create the file if not exits
+    )
+
+    global actualDB
+    if (added != None):
+        actualDB = secure_filename(file.filename)
 
 
 

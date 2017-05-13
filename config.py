@@ -1,9 +1,14 @@
+import os
+
 # Statement for enabling the development environment
 DEBUG = True
 
 # Define the application directory
-import os
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+# BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+# __file__ refers to the file settings.py
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))   # refers to application_top
+APP_STATIC = os.path.join(APP_ROOT, 'app/static')
 
 # Define the database - we are working with
 # SQLite for this example
@@ -25,3 +30,7 @@ THREADS_PER_PAGE = 2
 
 # Secret key for signing cookies
 # SECRET_KEY = "secret"
+
+UPLOAD_FOLDER = 'static'
+ALLOWED_EXTENSIONS = set(['json'])
+

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload new File</title>
+</head>
+<body>
+<h1>Subir archivo</h1>
+<form action="" method=post enctype=multipart/form-data>
+    <p><input type=file name=file>
+        <input type=submit value=Subir>
+</form>
+<h1>Redes Disponibles</h1>
+<ul>
+{% for e in ds %}
+    <li> <a href="/setDB/{{e['name']|safe}}"> {{e["name"]|safe}} </a> </li>
+{% endfor %}
+</ul>
+</body>
+</html>

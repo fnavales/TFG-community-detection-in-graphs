@@ -19,14 +19,11 @@
 <h2>Detección de comunidades en redes complejas</h2>
 
 <div style="width:700px; font-size:14px; text-align: justify;">
-    Selecciona un algortimo de entre los implementados para detectar comunidades.
+    Selecciona un algortimo de entre los implementados para detectar comunidades. <a href="load">Añadir red</a>
     <br/>
 </div>
 
 <p>
-    <!--<label><input type="checkbox" id="fixed" checked="checked"/> Fix in place after import.</label><br>-->
-    <!--<label><input type="checkbox" id="parseColor"/> Parse the color instead of-->
-    <!--copy (adds borders, highlights etc.)</label>-->
     <select onclick="updateIndex()" id="algGroup" name="Algoritmos" size=4>
 
         <option selected id="alg0" value="0">Lovaina</option>
@@ -108,6 +105,19 @@
                 type: 'continuous'
             }
         },
+        groups:{
+            useDefaultGroups: true,
+            com0: {color:{background:'rgb(20,20,255)'}},
+            com1: {color:{background:'rgb(153,0,0)'}},
+            com2: {color:{background:'rgb(153,0,153)'}},
+            com3: {color:{background:'rgb(230,230,10)'}},
+            com4: {color:{background:'rgb(153,77,0)'}},
+            com5: {color:{background:'rgb(0,153,77)'}},
+            com6: {color:{background:'rgb(0,153,0)'}},
+            com7: {color:{background:'rgb(255,20,255)'}},
+            com8: {color:{background:'rgb(20,20,20)'}},
+            com9: {color:{background:'rgb(79,156,79)'}}
+        },
         interaction: {
             tooltipDelay: 200,
             hideEdgesOnDrag: true
@@ -123,6 +133,7 @@
     };
 
     network = new vis.Network(container, data, options);
+    network.fit();
     network.on('click', function (params) {
         if (params.nodes.length > 0) {
             var data = nodes.get(params.nodes[0]); // get the data from selected node
@@ -150,45 +161,45 @@
     /**
      * This function fills the DataSets. These DataSets will update the network.
      */
-    //    function redrawAll(gephiJSON) {
-    //        if (gephiJSON.nodes === undefined) {
-    //            gephiJSON = gephiImported;
-    //        }
-    //        else {
-    //            gephiImported = gephiJSON;
-    //        }
-    //
-    //        nodes.clear();
-    //        edges.clear();
-    //
-    ////        var fixed = fixedCheckbox.checked;
-    ////        var parseColor = parseColorCheckbox.checked;
-    //
-    //        var parsed = vis.network.gephiParser.parseGephi(gephiJSON, {
-    //            fixed: false,
-    //            parseColor: true
-    //        });
-    //
-    //        // add the parsed data to the DataSets.
-    //        nodes.add(parsed.nodes);
-    //        edges.add(parsed.edges);
-    //
-    //        var communities = [];
-    //        nodes.forEach(function(element) {
-    //
-    //            if (communities.includes(element["color"])){
-    //
-    //            }else{
-    //                communities.push(element["color"]);
-    //            }
-    //        });
-    //        console.log(communities);
-    //        communitiesContent.innerHTML = "Número de comunidades: " + communities.length + "<br>Colores: " + communities;
-    //
-    //        var data = nodes.get(108); // get the data from node 2 as example
-    //        nodeContent.innerHTML = JSON.stringify(data, undefined, 3); // show the data in the div
-    //        network.fit(); // zoom to fit
-    //    }
+//        function redrawAll() {
+//            if (gephiJSON.nodes === undefined) {
+//                gephiJSON = gephiImported;
+//            }
+//            else {
+//                gephiImported = gephiJSON;
+//            }
+//
+//            nodes.clear();
+//            edges.clear();
+
+    //        var fixed = fixedCheckbox.checked;
+    //        var parseColor = parseColorCheckbox.checked;
+
+//            var parsed = vis.network.gephiParser.parseGephi(gephiJSON, {
+//                fixed: false,
+//                parseColor: true
+//            });
+//
+//            // add the parsed data to the DataSets.
+//            nodes.add(parsed.nodes);
+//            edges.add(parsed.edges);
+
+//            var communities = [];
+//            nodes.forEach(function(element) {
+//
+//                if (communities.includes(element["color"])){
+//
+//                }else{
+//                    communities.push(element["color"]);
+//                }
+//            });
+//            console.log(communities);
+//            communitiesContent.innerHTML = "Número de comunidades: " + communities.length + "<br>Colores: " + communities;
+//
+//            var data = nodes.get(108); // get the data from node 2 as example
+//            nodeContent.innerHTML = JSON.stringify(data, undefined, 3); // show the data in the div
+//            network.fit(); // zoom to fit
+//        }
 
 </script>
 
