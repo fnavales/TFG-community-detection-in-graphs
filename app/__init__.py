@@ -5,6 +5,9 @@ from igraph import *
 import pymongo
 from werkzeug import secure_filename
 from config import ALLOWED_EXTENSIONS, APP_STATIC
+import time
+
+current_milli_time = lambda: int(round(time.time() * 1000))
 
 # Define the WSGI application object
 app = Flask(__name__)
@@ -18,69 +21,74 @@ actualDB = None
 # Configurations
 app.config.from_object('config')
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def main():
-    # with open('app/gameT.json', 'rb') as data:
-    #     jsonToPython = json.load(data)
 
     if (actualDB):
-        data = db.networks.find_one({'name':actualDB})["data"]
+        data = db.networks.find_one({'name': actualDB})["data"]
     else:
         return redirect(url_for('upload_file'))
 
-    return render_template("index.html", json = data) #
+    comList = request.args.getlist('communities', None)
+    time = request.args.get('time', None)
+    modularidad = request.args.get('modularidad', None)
+
+    return render_template("index.html", json = data, communities = comList, time = time, modularidad = modularidad) #
 
 @app.route('/alg/<int:index>')
 def alg(index):
-    applyAlgDectCommunity(index)
-    return redirect(url_for('main'))
+    comList, time, modularidad = applyAlgDectCommunity(index)
+    return redirect(url_for('main', communities = comList, time = time, modularidad = modularidad))
 
 def applyAlgDectCommunity(index):
-    with open('app/gameT.json', 'r') as data:
-        jsonToPython = json.load(data)
+    if (actualDB):
+        data = db.networks.find_one({'name':actualDB})["data"]
 
-    nodes = jsonToPython['nodes']
-    edges = jsonToPython['edges']
+        nodes = data['nodes']
+        edges = data['edges']
 
-    # Sort nodes and edges
-    nodes = sorted(nodes, key=lambda k: int(k['id']), reverse=False)
-    edges = sorted(edges, key=lambda k: int(k['id']), reverse=False)
+        # Sort nodes and edges
+        nodes = sorted(nodes, key=lambda k: int(k['id']), reverse=False)
+        edges = sorted(edges, key=lambda k: int(k['id']), reverse=False)
 
-    # Create the graph
-    g = Graph.DictList(nodes, edges, directed=False, vertex_name_attr="id")
-    # print g
+        # Create the graph
+        g = Graph.DictList(nodes, edges, directed=False, vertex_name_attr="id")
 
-    # Get the communities partition
-    if (index == 0):
-        community = g.community_multilevel(weights=g.es['size'])
-    elif (index == 1):
-        community = g.community_leading_eigenvector(weights=g.es['size'])
-    elif (index == 2):
-        community = g.community_edge_betweenness(weights=g.es['size']).as_clustering()
-    elif (index == 3):
-        community = g.community_label_propagation(weights=g.es['size'])
+        # Get the communities partition
+        t_ini = time.time()
+        if (index == 0):
+            community = g.community_multilevel(weights=g.es['size'])
+        elif (index == 1):
+            community = g.community_leading_eigenvector(weights=g.es['size'])
+        elif (index == 2):
+            community = g.community_edge_betweenness(weights=g.es['size']).as_clustering()
+        elif (index == 3):
+            community = g.community_label_propagation(weights=g.es['size'])
+        t_fin = time.time()
 
-    # print community
-    # print g.vs[0]['color']
+        time_op = (t_fin - t_ini) * 1000
+        print "Tiempo:", time_op
 
-    # Change vertex color according to community partition
-    colors = ['red', 'blue', 'green', 'yellow', 'orange', 'grey', 'cyan', 'olive', 'purple']
+        for ind in range(len(community.membership)):
+            #g.vs[ind]['group'] = "com"+str(community.membership[ind])
+            nodes[ind]['group'] = "com"+str(community.membership[ind])
+            #nodes[ind]['size'] = float(nodes[ind]["attributes"]["Grado"])
+        # print g.vs.get_attribute_values('color')
 
-    for ind in range(len(community.membership)):
-        g.vs[ind]['color'] = colors[community.membership[ind]]
-        nodes[ind]['color'] = colors[community.membership[ind]]
-        nodes[ind]['size'] = float(nodes[ind]["attributes"]["Grado"])
-    # print g.vs.get_attribute_values('color')
+        # print edges[0]
 
-    # print edges[0]
+        data = {"nodes": nodes, "edges": edges}
+        # print data["nodes"]
 
-    red = {"nodes": nodes, "edges": edges}
-    # print red["nodes"]
+        # print db.networks.update_one(
+        #     {'name': actualDB},
+        #     {'$set': {'data': data}},
+        #     upsert=True  # Create the file if not exits
+        # )
+    else:
+        return redirect(url_for('upload_file'))
 
-    with open('red'+str(index)+'.json', 'wb') as data:
-        json.dump(red, data, indent=4)
-
-    return True
+    return community.membership, time_op, community.q
 
 # Sample HTTP error handling
 @app.errorhandler(404)
