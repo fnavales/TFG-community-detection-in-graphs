@@ -40,30 +40,51 @@
 
         <div class="container-fluid">
             <div class="row">
-                <div class="col-9" id="mynetwork">
+                <div class="col-9 top-buffer" id="mynetwork">
 
                 </div>
                 <div class="col-3">
-                    <div class="row">
-                        <label for="algGroup">Algoritmos</label>
-                        <select class="custom-select" id="algGroup" onclick="updateIndex(value)">
-                            <option selected value="-1" disabled>Elegir</option>
-                            <option value="0" > Lovaina                           </option>
-                            <option value="1" > Greedy -> Newman                  </option>
-                            <option value="2" > Edge Betweenness -> Girvan-Newman </option>
-                            <option value="3" > Label Propagation                 </option>
-                        </select>
+                    <div class="top-buffer"></div>
+                    <select class="custom-select" id="algGroup" onchange="updateIndex(value)">
+                        <option {% if algInd|int == -1 %} selected {% endif %} value="-1" disabled>Algoritmos</option>
+                        <option {% if algInd|int == 0 %} selected {% endif %} value="0" > Lovaina                           </option>
+                        <option {% if algInd|int == 1 %} selected {% endif %} value="1" > Greedy -> Newman                  </option>
+                        <option {% if algInd|int == 2 %} selected {% endif %} value="2" > Edge Betweenness -> Girvan-Newman </option>
+                        <option {% if algInd|int == 3 %} selected {% endif %} value="3" > Label Propagation                 </option>
+                    </select>
+                    <div id="accordion" role="tablist" aria-multiselectable="true">
+                        <div class="card">
+                            <div class="card-header" role="tab" id="headingOne">
+                                <h5 class="mb-0">
+                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                        Comunidades
+                                    </a>
+                                </h5>
+                            </div>
+
+                            <div id="collapseOne" class="collapse show" role="tabpanel" aria-labelledby="headingOne">
+                                <div class="card-block">
+                                    <pre id="communities"></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header" role="tab" id="headingOne">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                        Metadatos Nodo
+                                    </a>
+                                </h5>
+                            </div>
+
+                            <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo">
+                                <div class="card-block">
+                                    <pre id="nodeContent"></pre>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="row">
-
-                        <h4>Comunidades:</h4>
-                        <pre id="communities"></pre>
-                        <h4>Metadatos Nodo:</h4>
-                        <pre id="nodeContent"></pre>
-                    </div>
-
-
                 </div>
             </div>
         </div>
@@ -202,7 +223,7 @@
                 var data = nodes.get(selectedNode); // get the data from selected node
                 nodeContent.innerHTML = JSON.stringify(data, undefined, 3); // show the data in the div
                 var connectedNodes = network.getConnectedNodes(selectedNode);
-    //            console.log(connectedNodes);
+//                console.log(selectedNode);
     //            nodes.update([{id:data['id'], hidden:true}]);
 
             }
@@ -220,28 +241,67 @@
         {% endif %}
 
 
-        function getCommunityColor(element){
-            return network["groups"]["groups"][element["group"]]["color"]["background"];
+        function getCommunityColor(){
+            return network["groups"]["groups"];
         }
 
-        function setCommunityData() {
-            var communities = [];
+        function enlacesInOut(nodo) {
+            var connectedNodes = network.getConnectedNodes(nodo.id);
+            var entrada = 0;
+            var salida = 0;
 
-            nodes.forEach(function (element) {
-
-                if (communities.includes(getCommunityColor(element))) {
-
-                } else {
-                    communities.push(getCommunityColor(element));
+//            console.log(connectedNodes);
+            connectedNodes.forEach(function (e) {
+//                console.log("Will:"+nodo.group+", "+nodes.get(e).label+":"+(nodes.get(e)).group);
+                if (nodo.group === (nodes.get(e)).group) {
+                    entrada++;
+                }else {
+                    salida++;
                 }
             });
-            var html = "";
+            return {com: nodo.group,
+                    enlaces: {
+                    in: entrada,
+                    out: salida}
+            };
+        }
 
-            communities.forEach(function (c, i) {
-               html += '<span style="background:'+c+'">&nbsp;&nbsp;</span> Comunidad '+ i +' <br><br>';
+
+        function setCommunityData() {
+            var valoresCom = {};
+            var colores = getCommunityColor();
+            var numberOfCom = [];
+
+
+            nodes.forEach(function (element) {
+                if(numberOfCom.indexOf(element.group) < 0){
+                    numberOfCom.push(element.group);
+                }
+                var aux = enlacesInOut(element);
+                if (!valoresCom[aux.com]) {
+                    valoresCom[aux.com] = aux.enlaces;
+                }else{
+                    valoresCom[aux.com].in += aux.enlaces.in;
+                    valoresCom[aux.com].out += aux.enlaces.out;
+                }
+
             });
-            communitiesContent.innerHTML = html + "Número de comunidades: " + communities.length +
-                "<br><br>Tiempo: "+ {{time}} + " ms<br><br>Modularidad: " + {{modularidad}};
+            var html = "";
+            console.log(valoresCom);
+
+            Object.keys(colores).forEach(function(key, index) {
+//                console.log(this[key].color.background);
+                if (numberOfCom.indexOf(key) >= 0) {
+                    var total = valoresCom[key].in + valoresCom[key].out;
+                    var dentro = (valoresCom[key].in/total)*100;
+                    var fuera = (valoresCom[key].out/total)*100;
+                    html += '<span style="background:' + this[key].color.background + '">&nbsp;&nbsp;</span> Comunidad ' + index + ' (' + dentro.toPrecision(2) + '%, ' + fuera.toPrecision(2) + '%)<br>';
+                }
+            }, colores);
+
+            communitiesContent.innerHTML =  html +
+                                            "<br>Tiempo: " + {{time|float|round(3, 'ceil')}} + " ms<br>" +
+                                            "Modularidad: " + {{modularidad|float|round(3, 'ceil')}};
         }
         /**
          * This function fills the DataSets. These DataSets will update the network.

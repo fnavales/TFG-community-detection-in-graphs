@@ -32,13 +32,14 @@ def main():
     comList = request.args.getlist('communities', None)
     time = request.args.get('time', None)
     modularidad = request.args.get('modularidad', None)
+    index = request.args.get('algInd', -1)
 
-    return render_template("index.html", json = data, communities = comList, time = time, modularidad = modularidad) #
+    return render_template("index.html", json = data, communities = comList, time = time, modularidad = modularidad, algInd = index) #
 
 @app.route('/alg/<int:index>')
 def alg(index):
     comList, time, modularidad = applyAlgDectCommunity(index)
-    return redirect(url_for('main', communities = comList, time = time, modularidad = modularidad))
+    return redirect(url_for('main', communities = comList, time = time, modularidad = modularidad, algInd = index))
 
 def applyAlgDectCommunity(index):
     if (actualDB):

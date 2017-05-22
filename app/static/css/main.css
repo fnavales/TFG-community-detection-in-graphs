@@ -1,6 +1,6 @@
 #mynetwork {
     width: 950px;
-    height: 950px;
+    height: 500px;
     border: 1px solid lightgray;
 }
 
@@ -61,3 +61,6 @@ pre {
 .control-group.success .fileupload .uneditable-input{color:#468847;border-color:#468847;}
 .control-group.success .fileupload .fileupload-preview{color:#468847;}
 .control-group.success .fileupload .thumbnail{border-color:#468847;}
+
+
+.top-buffer { margin-top:20px; }
