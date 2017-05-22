@@ -102,27 +102,32 @@
 
         <!-- Funciones de Dibujo -->
         <script type="text/javascript">
+            /** Atributos de la red **/
+            var network;
+            var allNodes;
+            var highlightActive = false;
 
+            /** Elementos Capturados **/
+            var algGroup = document.getElementById('algGroup')
+            var nodeContent = document.getElementById('nodeContent');
+            var communitiesContent = document.getElementById('communities');
 
+            /** Extraer nodos y enlaces **/
+            var nodes = new vis.DataSet();
+            var edges = new vis.DataSet();
+//            loadJSON('../static/data/red'+selected+'.json', redrawAll, function (err) {
+//                console.log('error')
+//            });
+            var parsed = parseGephi({{json | tojson}},
+                {
+                    fixed: false,
+                    parseColor: true
+                }
+            );
+            nodes.add(parsed.nodes);
+            edges.add(parsed.edges);
 
-        var network;
-
-        var nodes = new vis.DataSet();
-        var edges = new vis.DataSet();
-        var gephiImported;
-        var algGroup = document.getElementById('algGroup')
-
-        var parsed = parseGephi({{json | tojson}},
-            {
-                fixed: false,
-                parseColor: true
-            }
-        );
-
-        nodes.add(parsed.nodes);
-        edges.add(parsed.edges);
-
-
+            /** Petición para calcular comunidades **/
             function updateIndex(value) {
                 if (value >= 0){
                     var ruta = "http://localhost:8080/alg/" + value;
@@ -130,117 +135,170 @@
                 }
             }
 
-        //    var fixedCheckbox = document.getElementById('fixed');
-        //    fixedCheckbox.onchange = redrawAll;
+            /** Pintar el grafo **/
+            function redrawAll() {
+                var container = document.getElementById('mynetwork');
+                var data = {
+                    nodes: nodes,
+                    edges: edges
+                };
+                var options = {
+                    nodes: {
+                        borderWidth: 1,
+                        shape: 'dot',
+                        scaling: {
+                            min: 10,
+                            max: 30,
+                            label: {
+                                min: 8,
+                                max: 30,
+                                drawThreshold: 12,
+                                maxVisible: 20
+                            }
+                        },
+                        font: {
+                            size: 12,
+                            face: 'Tahoma'
+                        }
+                    },
+                    edges: {
+                        width: 0.15,
+                        color: {inherit: 'from'},
+                        smooth: {
+                            type: 'continuous'
+                        }
+                    },
+                    groups:{
+                        useDefaultGroups: true
+                    },
+                    interaction: {
+                        hideEdgesOnDrag: true,
+                        multiselect: true
+                    },
 
-        //    var parseColorCheckbox = document.getElementById('parseColor');
-        //    parseColorCheckbox.onchange = redrawAll;
-
-        var nodeContent = document.getElementById('nodeContent');
-        var communitiesContent = document.getElementById('communities');
-
-        //    loadJSON('../static/data/red'+selected+'.json', redrawAll, function (err) {
-        //        console.log('error')
-        //    });
-
-        var container = document.getElementById('mynetwork');
-        var data = {
-            nodes: nodes,
-            edges: edges
-        };
-        var options = {
-            nodes: {
-                borderWidth: 1,
-                shape: 'dot',
-                scaling: {
-                    min: 10,
-                    max: 30,
-                    label: {
-                        min: 8,
-                        max: 30,
-                        drawThreshold: 12,
-                        maxVisible: 20
+                    physics: {
+                        stabilization: false,
+                        barnesHut: {
+                            gravitationalConstant: -4000,
+                            springConstant: 0.001,
+                            springLength: 200
+                        },
+                        forceAtlas2Based: {
+                            gravitationalConstant: -26,
+                            centralGravity: 0.005,
+                            springLength: 230,
+                            springConstant: 0.18
+                        },
+                        maxVelocity: 146,
+                        solver: 'barnesHut',
+                        timestep: 0.35,
+                        stabilization: {
+                            enabled:true,
+                            iterations:2000,
+                            updateInterval:25
+                        }
                     }
-                },
-                font: {
-                    size: 12,
-                    face: 'Tahoma'
-                }
-            },
-            edges: {
-                width: 0.15,
-                color: {inherit: 'from'},
-                smooth: {
-                    type: 'continuous'
-                }
-            },
-            groups:{
-                useDefaultGroups: true,
-                com0: {color:{background:'rgb(20,20,255)'}},
-                com1: {color:{background:'rgb(153,0,0)'}},
-                com2: {color:{background:'rgb(153,0,153)'}},
-                com3: {color:{background:'rgb(230,230,10)'}},
-                com4: {color:{background:'rgb(153,77,0)'}},
-                com5: {color:{background:'rgb(0,153,77)'}},
-                com6: {color:{background:'rgb(0,153,0)'}},
-                com7: {color:{background:'rgb(255,20,255)'}},
-                com8: {color:{background:'rgb(20,20,20)'}},
-                com9: {color:{background:'rgb(79,156,79)'}}
-            },
-            interaction: {
-                tooltipDelay: 200,
-                hideEdgesOnDrag: true
-            },
-            physics: {
-                stabilization: false,
-                barnesHut: {
-                    gravitationalConstant: -4000,
-                    springConstant: 0.001,
-                    springLength: 200
-                },
-                forceAtlas2Based: {
-                    gravitationalConstant: -26,
-                    centralGravity: 0.005,
-                    springLength: 230,
-                    springConstant: 0.18
-                },
-                maxVelocity: 146,
-                solver: 'barnesHut',
-                timestep: 0.35,
-                stabilization: {
-                    enabled:true,
-                    iterations:2000,
-                    updateInterval:25
-                }
-            }
-        };
+                };
+                network = new vis.Network(container, data, options);
 
-        network = new vis.Network(container, data, options);
-        network.fit();
-        network.on('click', function (params) {
+                // Si existen comunidades obtenemos datos para estas
+                {% if communities %}
+                    {% for c in communities %}
+                        nodes.update([{id:{{ loop.index }}, group:{{ c|int }}}]);
+                    {% endfor %}
+                    var data = nodes.get(108); // get the data from node 2 as example
+                    nodeContent.innerHTML = JSON.stringify(data, undefined, 3); // show the data in the div
+                    setCommunityData();
+                {% else %}
+                    communitiesContent.innerHTML = "Para ver datos seleccione un algortimo de la lista";
+                {% endif %}
+
+                // Obtener copia de los nodos para marcar vecinos
+                allNodes = nodes.get({returnType:"Object"});
+
+                network.on("click",neighbourhoodHighlight);
+        }
+
+        function neighbourhoodHighlight(params) {
+            // if something is selected:
             if (params.nodes.length > 0) {
                 var selectedNode = params.nodes[0];
                 var data = nodes.get(selectedNode); // get the data from selected node
                 nodeContent.innerHTML = JSON.stringify(data, undefined, 3); // show the data in the div
-                var connectedNodes = network.getConnectedNodes(selectedNode);
-//                console.log(selectedNode);
-    //            nodes.update([{id:data['id'], hidden:true}]);
+                  highlightActive = true;
+                  var i,j;
+                  var degrees = 2;
 
+                  // mark all nodes as hard to read.
+                  for (var nodeId in allNodes) {
+                    allNodes[nodeId].color = 'rgba(200,200,200,0.5)';
+                    if (allNodes[nodeId].hiddenLabel === undefined) {
+                      allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+                      allNodes[nodeId].label = undefined;
+                    }
+                  }
+                  var connectedNodes = network.getConnectedNodes(selectedNode);
+                  var allConnectedNodes = [];
+
+                  // get the second degree nodes
+                  for (i = 1; i < degrees; i++) {
+                    for (j = 0; j < connectedNodes.length; j++) {
+                      allConnectedNodes = allConnectedNodes.concat(network.getConnectedNodes(connectedNodes[j]));
+                    }
+                  }
+
+                  // all second degree nodes get a different color and their label back
+                  for (i = 0; i < allConnectedNodes.length; i++) {
+                    allNodes[allConnectedNodes[i]].color = 'rgba(150,150,150,0.75)';
+                    if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+                      allNodes[allConnectedNodes[i]].label = allNodes[allConnectedNodes[i]].hiddenLabel;
+                      allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+                    }
+                  }
+
+                  // all first degree nodes get their own color and their label back
+                  for (i = 0; i < connectedNodes.length; i++) {
+                    allNodes[connectedNodes[i]].color = undefined;
+                    if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+                      allNodes[connectedNodes[i]].label = allNodes[connectedNodes[i]].hiddenLabel;
+                      allNodes[connectedNodes[i]].hiddenLabel = undefined;
+                    }
+                  }
+
+                  // the main node gets its own color and its label back.
+                  allNodes[selectedNode].color = undefined;
+                  if (allNodes[selectedNode].hiddenLabel !== undefined) {
+                    allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+                    allNodes[selectedNode].hiddenLabel = undefined;
+                  }
+                }
+            else if (highlightActive === true) {
+                // reset all nodes
+                for (var nodeId in allNodes) {
+                    allNodes[nodeId].color = undefined;
+                    if (allNodes[nodeId].hiddenLabel !== undefined) {
+                        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+                        allNodes[nodeId].hiddenLabel = undefined;
+                    }
+                }
+                highlightActive = false;
             }
-        })
 
-        {% if communities %}
-            {% for c in communities %}
-
-                nodes.update([{id:{{ loop.index }}, group:"com"+{{ c|int }}}]);
-            {% endfor %}
-            var data = nodes.get(108); // get the data from node 2 as example
-            nodeContent.innerHTML = JSON.stringify(data, undefined, 3); // show the data in the div
-            network.fit(); // zoom to fit
-            setCommunityData();
-        {% endif %}
+            // transform the object into an array
+            var updateArray = [];
+            for (nodeId in allNodes) {
+              if (allNodes.hasOwnProperty(nodeId)) {
+                updateArray.push(allNodes[nodeId]);
+              }
+            }
+            nodes.update(updateArray);
+          }
 
 
+
+
+
+        redrawAll();
         function getCommunityColor(){
             return network["groups"]["groups"];
         }
@@ -272,7 +330,6 @@
             var colores = getCommunityColor();
             var numberOfCom = [];
 
-
             nodes.forEach(function (element) {
                 if(numberOfCom.indexOf(element.group) < 0){
                     numberOfCom.push(element.group);
@@ -287,64 +344,41 @@
 
             });
             var html = "";
-            console.log(valoresCom);
+
 
             Object.keys(colores).forEach(function(key, index) {
-//                console.log(this[key].color.background);
-                if (numberOfCom.indexOf(key) >= 0) {
-                    var total = valoresCom[key].in + valoresCom[key].out;
-                    var dentro = (valoresCom[key].in/total)*100;
-                    var fuera = (valoresCom[key].out/total)*100;
-                    html += '<span style="background:' + this[key].color.background + '">&nbsp;&nbsp;</span> Comunidad ' + index + ' (' + dentro.toPrecision(2) + '%, ' + fuera.toPrecision(2) + '%)<br>';
-                }
-            }, colores);
+                var total = valoresCom[key].in + valoresCom[key].out;
+                var dentro = (valoresCom[key].in/total)*100;
+                var fuera = (valoresCom[key].out/total)*100;
 
+                html += '<span style="background:' + this[key].color.background + '"><a onclick="selectNodesFromColor('+index+')">&nbsp;&nbsp;</a></span> Comunidad ' + index + ' (' + dentro.toPrecision(2) + '%, ' + fuera.toPrecision(2) + '%)<br>';
+
+            }, colores);
+//
             communitiesContent.innerHTML =  html +
                                             "<br>Tiempo: " + {{time|float|round(3, 'ceil')}} + " ms<br>" +
                                             "Modularidad: " + {{modularidad|float|round(3, 'ceil')}};
         }
-        /**
-         * This function fills the DataSets. These DataSets will update the network.
-         */
-    //        function redrawAll() {
-    //            if (gephiJSON.nodes === undefined) {
-    //                gephiJSON = gephiImported;
-    //            }
-    //            else {
-    //                gephiImported = gephiJSON;
-    //            }
-    //
-    //            nodes.clear();
-    //            edges.clear();
 
-        //        var fixed = fixedCheckbox.checked;
-        //        var parseColor = parseColorCheckbox.checked;
+        function selectNodesFromColor(ind) {
+            var newNodes = (nodes.get()).filter(function (el) {
+                  return el.group === (ind);
+            }).map(function(el) {
+                return el.id;
+            }).sort();
 
-    //            var parsed = vis.network.gephiParser.parseGephi(gephiJSON, {
-    //                fixed: false,
-    //                parseColor: true
-    //            });
-    //
-    //            // add the parsed data to the DataSets.
-    //            nodes.add(parsed.nodes);
-    //            edges.add(parsed.edges);
-
-    //            var communities = [];
-    //            nodes.forEach(function(element) {
-    //
-    //                if (communities.includes(element["color"])){
-    //
-    //                }else{
-    //                    communities.push(element["color"]);
-    //                }
-    //            });
-    //            console.log(communities);
-    //            communitiesContent.innerHTML = "Número de comunidades: " + communities.length + "<br>Colores: " + communities;
-    //
-    //            var data = nodes.get(108); // get the data from node 2 as example
-    //            nodeContent.innerHTML = JSON.stringify(data, undefined, 3); // show the data in the div
-    //            network.fit(); // zoom to fit
-    //        }
+//            network.selectNodes(newNodes);
+            var options = {
+                // position: {x:positionx,y:positiony}, // this is not relevant when focusing on nodes
+                scale: 0.3,
+                locked:true,
+                animation: {
+                  duration: 1000,
+                  easingFunction: 'easeInQuad'
+                }
+            };
+            network.focus(newNodes[Math.floor(Math.random()*newNodes.length)],options);
+        }
 
     </script>
     </body>

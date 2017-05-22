@@ -105,7 +105,9 @@ def upload_file():
     if request.method == 'POST':
         file = request.files['file']
         if file and allowed_file(file.filename):
+            print file
             save_file(file)
+
             # file.save(os.path.join(APP_STATIC, filename))
             # return redirect(url_for('uploaded_file', filename=filename))
             return redirect(url_for('main'))
