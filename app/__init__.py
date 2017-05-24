@@ -21,7 +21,7 @@ actualDB = None
 # Configurations
 app.config.from_object('config')
 
-@app.route('/', methods=['GET'])
+@app.route('/')
 def main():
 
     if (actualDB):
@@ -29,67 +29,60 @@ def main():
     else:
         return redirect(url_for('upload_file'))
 
-    comList = request.args.getlist('communities', None)
-    time = request.args.get('time', None)
-    modularidad = request.args.get('modularidad', None)
-    index = request.args.get('algInd', -1)
+    return render_template("index.html", json = data)
 
-    return render_template("index.html", json = data, communities = comList, time = time, modularidad = modularidad, algInd = index) #
-
-@app.route('/alg/<int:index>')
-def alg(index):
-    comList, time, modularidad = applyAlgDectCommunity(index)
-    return redirect(url_for('main', communities = comList, time = time, modularidad = modularidad, algInd = index))
-
+@app.route('/apply_alg/<int:index>', methods=['GET', 'POST'])
 def applyAlgDectCommunity(index):
-    if (actualDB):
-        data = db.networks.find_one({'name':actualDB})["data"]
+    if request.method == 'POST':
+        if (actualDB):
+            data = db.networks.find_one({'name':actualDB})["data"]
 
-        nodes = data['nodes']
-        edges = data['edges']
+            nodes = data['nodes']
+            edges = data['edges']
 
-        # Sort nodes and edges
-        nodes = sorted(nodes, key=lambda k: int(k['id']), reverse=False)
-        edges = sorted(edges, key=lambda k: int(k['id']), reverse=False)
+            # Sort nodes and edges
+            nodes = sorted(nodes, key=lambda k: int(k['id']), reverse=False)
+            edges = sorted(edges, key=lambda k: int(k['id']), reverse=False)
 
-        # Create the graph
-        g = Graph.DictList(nodes, edges, directed=False, vertex_name_attr="id")
+            # Create the graph
+            g = Graph.DictList(nodes, edges, directed=False, vertex_name_attr="id")
 
-        # Get the communities partition
-        t_ini = time.time()
-        if (index == 0):
-            community = g.community_multilevel(weights=g.es['size'])
-        elif (index == 1):
-            community = g.community_leading_eigenvector(weights=g.es['size'])
-        elif (index == 2):
-            community = g.community_edge_betweenness(weights=g.es['size']).as_clustering()
-        elif (index == 3):
-            community = g.community_label_propagation(weights=g.es['size'])
-        t_fin = time.time()
+            # Get the communities partition
+            t_ini = time.time()
+            if (index == 0):
+                community = g.community_multilevel(weights=g.es['size'])
+            elif (index == 1):
+                community = g.community_leading_eigenvector(weights=g.es['size'])
+            elif (index == 2):
+                community = g.community_edge_betweenness(weights=g.es['size']).as_clustering()
+            elif (index == 3):
+                community = g.community_label_propagation(weights=g.es['size'])
+            t_fin = time.time()
 
-        time_op = (t_fin - t_ini) * 1000
-        print "Tiempo:", time_op
+            time_op = (t_fin - t_ini) * 1000
 
-        for ind in range(len(community.membership)):
-            #g.vs[ind]['group'] = "com"+str(community.membership[ind])
-            nodes[ind]['group'] = "com"+str(community.membership[ind])
-            #nodes[ind]['size'] = float(nodes[ind]["attributes"]["Grado"])
-        # print g.vs.get_attribute_values('color')
+            for ind in range(len(community.membership)):
+                #g.vs[ind]['group'] = "com"+str(community.membership[ind])
+                nodes[ind]['group'] = "com"+str(community.membership[ind])
+                #nodes[ind]['size'] = float(nodes[ind]["attributes"]["Grado"])
+            # print g.vs.get_attribute_values('color')
 
-        # print edges[0]
+            # print edges[0]
 
-        data = {"nodes": nodes, "edges": edges}
-        # print data["nodes"]
+            data = {"nodes": nodes, "edges": edges}
+            # print data["nodes"]
 
-        # print db.networks.update_one(
-        #     {'name': actualDB},
-        #     {'$set': {'data': data}},
-        #     upsert=True  # Create the file if not exits
-        # )
-    else:
-        return redirect(url_for('upload_file'))
-
-    return community.membership, time_op, community.q
+            # print db.networks.update_one(
+            #     {'name': actualDB},
+            #     {'$set': {'data': data}},
+            #     upsert=True  # Create the file if not exits
+            # )
+            return json.dumps({"comunidades": community.membership,
+                               "tiempo": round(time_op, 3),
+                                "modularidad": round(community.q, 3)
+            })
+        else:
+            return redirect(url_for('upload_file'))
 
 # Sample HTTP error handling
 @app.errorhandler(404)

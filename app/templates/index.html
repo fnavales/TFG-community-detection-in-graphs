@@ -46,11 +46,11 @@
                 <div class="col-3">
                     <div class="top-buffer"></div>
                     <select class="custom-select" id="algGroup" onchange="updateIndex(value)">
-                        <option {% if algInd|int == -1 %} selected {% endif %} value="-1" disabled>Algoritmos</option>
-                        <option {% if algInd|int == 0 %} selected {% endif %} value="0" > Lovaina                           </option>
-                        <option {% if algInd|int == 1 %} selected {% endif %} value="1" > Greedy -> Newman                  </option>
-                        <option {% if algInd|int == 2 %} selected {% endif %} value="2" > Edge Betweenness -> Girvan-Newman </option>
-                        <option {% if algInd|int == 3 %} selected {% endif %} value="3" > Label Propagation                 </option>
+                        <option selected  value="-1" disabled>Algoritmos</option>
+                        <option  value="0" > Lovaina                           </option>
+                        <option  value="1" > Greedy -> Newman                  </option>
+                        <option  value="2" > Edge Betweenness -> Girvan-Newman </option>
+                        <option  value="3" > Label Propagation                 </option>
                     </select>
                     <div id="accordion" role="tablist" aria-multiselectable="true">
                         <div class="card">
@@ -96,12 +96,16 @@
         <script type="text/javascript" src="../static/js/exampleUtil.js"></script>
 
         <!-- JS BootStrap -->
-        <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+        <script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 
         <!-- Funciones de Dibujo -->
         <script type="text/javascript">
+            $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
             /** Atributos de la red **/
             var network;
             var allNodes;
@@ -111,6 +115,7 @@
             var algGroup = document.getElementById('algGroup')
             var nodeContent = document.getElementById('nodeContent');
             var communitiesContent = document.getElementById('communities');
+            communitiesContent.innerHTML = "Para ver datos seleccione un algortimo de la lista";
 
             /** Extraer nodos y enlaces **/
             var nodes = new vis.DataSet();
@@ -129,9 +134,21 @@
 
             /** Petición para calcular comunidades **/
             function updateIndex(value) {
+
                 if (value >= 0){
-                    var ruta = "http://localhost:8080/alg/" + value;
-                    window.location.replace(ruta);
+                    $.ajax({
+                        type : 'POST',
+                        url : $SCRIPT_ROOT + '/apply_alg/'+value,
+                        success : function(data) {
+                            var networkData = JSON.parse(data);
+                            networkData["comunidades"].forEach(function (e,id) {
+                                nodes.update([{id:id+1, group:parseInt(e)}]);
+                            });
+                            nodeContent.innerHTML = "Seleccione un nodo";
+                            setCommunityData(networkData.tiempo,networkData.modularidad);
+                            allNodes = nodes.get({returnType:"Object"});
+                        }
+                    });
                 }
             }
 
@@ -200,18 +217,6 @@
                     }
                 };
                 network = new vis.Network(container, data, options);
-
-                // Si existen comunidades obtenemos datos para estas
-                {% if communities %}
-                    {% for c in communities %}
-                        nodes.update([{id:{{ loop.index }}, group:{{ c|int }}}]);
-                    {% endfor %}
-                    var data = nodes.get(108); // get the data from node 2 as example
-                    nodeContent.innerHTML = JSON.stringify(data, undefined, 3); // show the data in the div
-                    setCommunityData();
-                {% else %}
-                    communitiesContent.innerHTML = "Para ver datos seleccione un algortimo de la lista";
-                {% endif %}
 
                 // Obtener copia de los nodos para marcar vecinos
                 allNodes = nodes.get({returnType:"Object"});
@@ -308,15 +313,14 @@
             var entrada = 0;
             var salida = 0;
 
-//            console.log(connectedNodes);
             connectedNodes.forEach(function (e) {
-//                console.log("Will:"+nodo.group+", "+nodes.get(e).label+":"+(nodes.get(e)).group);
                 if (nodo.group === (nodes.get(e)).group) {
                     entrada++;
                 }else {
                     salida++;
                 }
             });
+            nodes.update([{id:nodo.id, enlaces:{in:entrada, out:salida}}]);
             return {com: nodo.group,
                     enlaces: {
                     in: entrada,
@@ -325,7 +329,7 @@
         }
 
 
-        function setCommunityData() {
+        function setCommunityData(tiempo, modularidad) {
             var valoresCom = {};
             var colores = getCommunityColor();
             var numberOfCom = [];
@@ -345,8 +349,7 @@
             });
             var html = "";
 
-
-            Object.keys(colores).forEach(function(key, index) {
+            Object.keys(colores).slice(0,numberOfCom.length).forEach(function(key, index) {
                 var total = valoresCom[key].in + valoresCom[key].out;
                 var dentro = (valoresCom[key].in/total)*100;
                 var fuera = (valoresCom[key].out/total)*100;
@@ -356,8 +359,8 @@
             }, colores);
 //
             communitiesContent.innerHTML =  html +
-                                            "<br>Tiempo: " + {{time|float|round(3, 'ceil')}} + " ms<br>" +
-                                            "Modularidad: " + {{modularidad|float|round(3, 'ceil')}};
+                                            "<br>Tiempo: " + tiempo + " ms<br>" +
+                                            "Modularidad: " + modularidad;
         }
 
         function selectNodesFromColor(ind) {
