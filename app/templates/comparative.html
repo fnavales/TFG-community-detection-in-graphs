@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block body %}
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <link rel="stylesheet" href="../static/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <div class="row col-12">
+        <div class="col-4" id="container" style="min-width: 300px; height: 400px; margin: 0 auto"></div>
+        <div class="col-4" id="containerCom" style="min-width: 300px; height: 400px; margin: 0 auto"></div>
+        <div class="col-4" id="containerQ" style="min-width: 300px; height: 400px; margin: 0 auto"></div>
+    </div>
+    <script>
+        Highcharts.chart('container', {
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: 'Tiempos'
+        },
+        subtitle: {
+            text: ''
+        },
+        xAxis: {
+            type: 'category',
+            labels: {
+                rotation: -45,
+                style: {
+                    fontSize: '13px',
+                    fontFamily: 'Verdana, sans-serif'
+                }
+            }
+        },
+        yAxis: {
+            type: 'logarithmic',
+            title: {
+                text: 'tiempo(ms)'
+            }
+        },
+        legend: {
+            enabled: false
+        },
+        tooltip: {
+            pointFormat: 'Tiempo: <b>{point.y:.1f}ms</b>'
+        },
+        series: [{
+            name: 'Population',
+            data: {{data|tojson}},
+            dataLabels: {
+                enabled: true,
+                rotation: -90,
+                color: '#FFFFFF',
+                align: 'right',
+                format: '{point.y:.1f}', // one decimal
+                y: 10, // 10 pixels down from the top
+                style: {
+                    fontSize: '13px',
+                    fontFamily: 'Verdana, sans-serif'
+                }
+            }
+        }]
+    });
+
+        Highcharts.chart('containerCom', {
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: 'Número de Comunidades'
+        },
+        subtitle: {
+            text: ''
+        },
+        xAxis: {
+            type: 'category',
+            labels: {
+                rotation: -45,
+                style: {
+                    fontSize: '13px',
+                    fontFamily: 'Verdana, sans-serif'
+                }
+            }
+        },
+        yAxis: {
+            allowDecimals: false,
+            title: {
+                text: 'comunidades'
+            }
+        },
+        legend: {
+            enabled: false
+        },
+        tooltip: {
+            pointFormat: '<b>{point.y:.1f} comunidades</b>'
+        },
+        series: [{
+            name: 'Population',
+            data: {{data1|tojson}},
+            dataLabels: {
+                enabled: true,
+                rotation: -90,
+                color: '#FFFFFF',
+                align: 'right',
+                format: '{point.y:.1f}', // one decimal
+                y: 10, // 10 pixels down from the top
+                style: {
+                    fontSize: '13px',
+                    fontFamily: 'Verdana, sans-serif'
+                }
+            }
+        }]
+    });
+
+        Highcharts.chart('containerQ', {
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: 'Modularidad'
+        },
+        subtitle: {
+            text: ''
+        },
+        xAxis: {
+            type: 'category',
+            labels: {
+                rotation: -45,
+                style: {
+                    fontSize: '13px',
+                    fontFamily: 'Verdana, sans-serif'
+                }
+            }
+        },
+        yAxis: {
+            min:0,
+            max:1,
+            title: {
+                text: 'Q'
+            }
+        },
+        legend: {
+            enabled: false
+        },
+        tooltip: {
+            pointFormat: 'Tiempo: <b>{point.y:.1f}ms</b>'
+        },
+        series: [{
+            name: 'Population',
+            data: {{data2|tojson}},
+            dataLabels: {
+                enabled: true,
+                rotation: -90,
+                color: '#FFFFFF',
+                align: 'right',
+                format: '{point.y:.1f}', // one decimal
+                y: 10, // 10 pixels down from the top
+                style: {
+                    fontSize: '13px',
+                    fontFamily: 'Verdana, sans-serif'
+                }
+            }
+        }]
+    });
+
+
+    </script>
+{% endblock %}

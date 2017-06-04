@@ -42,6 +42,7 @@ function parseGephi(gephiJSON, optionsObj) {
         if (gEdge.color && options.inheritColor === false) {
             edge['color'] = gEdge.color;
         }
+        //edge['value'] = gEdge.size !== undefined ? parseInt(gEdge.size) : 1.0;
         edges.push(edge);
     }
 
@@ -53,7 +54,7 @@ function parseGephi(gephiJSON, optionsObj) {
         node['title'] = gNode.title;
         node['x'] = gNode.x;
         node['y'] = gNode.y;
-        node['label'] = gNode.label;
+        node['label'] = gNode.label.replace(/\"/g,'');
         node['title'] = gNode.attributes !== undefined ? gNode.attributes.title : undefined;
         if (gNode['group'] !== undefined)
             node['group'] = gNode.group;
@@ -64,7 +65,7 @@ function parseGephi(gephiJSON, optionsObj) {
 //    else {
 //      node['color'] = gNode.color !== undefined ? {background:gNode.color, border:gNode.color, highlight: {background:gNode.color, border:gNode.color}, hover:{background:gNode.color, border:gNode.color}} : undefined;
 //    }
-        node['size'] = gNode.attributes.Grado !== undefined ? parseInt(gNode.attributes.Grado) : 10.0;
+        node['value'] = gNode.attributes.Grado !== undefined ? parseInt(gNode.attributes.Grado) : 10.0;
         node['fixed'] = options.nodes.fixed && gNode.x !== undefined && gNode.y !== undefined;
         nodes.push(node);
     }

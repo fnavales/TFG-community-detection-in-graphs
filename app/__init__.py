@@ -6,6 +6,8 @@ import pymongo
 from werkzeug import secure_filename
 from config import ALLOWED_EXTENSIONS, APP_STATIC
 import time
+import networkx
+import community as nxcom
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
@@ -31,6 +33,80 @@ def main():
 
     return render_template("index.html", json = data)
 
+
+def parseIgraphToNetworkx(ig):
+    G = networkx.Graph(ig.get_edgelist())  # In case you graph is undirected
+
+    if (len(ig.es['size']) > 0):            # Añadimos los pesos de los enlaces
+        index = 0
+        for u, v, d in G.edges(data=True):
+            d['weight'] = ig.es['size'][index]
+            index += 1
+
+    return G
+
+
+@app.route('/comparative')
+def comparative():
+    listT, listC, listQ = listComparative()
+
+    return render_template("comparative.html", data = listT, data1 = listC, data2 = listQ)
+
+def listComparative():
+    listT = []
+    listC = []
+    listQ = []
+    data = db.networks.find_one({'name': actualDB})["data"]
+
+    nodes = data['nodes']
+    edges = data['edges']
+
+    # Sort nodes and edges
+    nodes = sorted(nodes, key=lambda k: int(k['id']), reverse=False)
+    edges = sorted(edges, key=lambda k: int(k['id']), reverse=False)
+
+    # Create the graph
+    g = Graph.DictList(nodes, edges, directed=False, vertex_name_attr="id")  # Igraph
+    G = parseIgraphToNetworkx(g)  # Networkx
+
+    for i in range(4):
+        # Get the communities partition
+        t_ini = time.time()
+        if (i == 0):
+            # NetworX
+            # parti = nxcom.best_partition(G,weight='weight', resolution=0.95)
+            # comList = parti.values()
+            # g = nxcom.modularity(parti, G, weight='weight')
+            # Igraph
+            community = g.community_multilevel(weights=g.es['size'], return_levels=False)
+            comList = community.membership
+            q = community.q
+            name = "Lovaina"
+            # for list in g.community_multilevel(weights=g.es['size'], return_levels=True):
+            #     print list
+        elif (i == 1):
+            community = g.community_leading_eigenvector(weights=g.es['size'])
+            comList = community.membership
+            q = community.q
+            name = "Greedy Newman"
+        elif (i == 2):
+            community = g.community_edge_betweenness(weights=g.es['size']).as_clustering()
+            comList = community.membership
+            q = community.q
+            name = "Edge Betweenness"
+        elif (i == 3):
+            community = g.community_label_propagation(weights=g.es['size'])
+            comList = community.membership
+            q = community.q
+            name = "Label Propagation"
+
+        t_fin = time.time()
+        time_op = (t_fin - t_ini) *1000
+        listT.append([name,float(time_op)])
+        listC.append([name,int(len(community))])
+        listQ.append([name,community.q])
+    return listT, listC, listQ
+
 @app.route('/apply_alg/<int:index>', methods=['GET', 'POST'])
 def applyAlgDectCommunity(index):
     if request.method == 'POST':
@@ -45,41 +121,47 @@ def applyAlgDectCommunity(index):
             edges = sorted(edges, key=lambda k: int(k['id']), reverse=False)
 
             # Create the graph
-            g = Graph.DictList(nodes, edges, directed=False, vertex_name_attr="id")
+            g = Graph.DictList(nodes, edges, directed=False, vertex_name_attr="id")     # Igraph
+            G = parseIgraphToNetworkx(g)                                                # Networkx
 
             # Get the communities partition
             t_ini = time.time()
             if (index == 0):
-                community = g.community_multilevel(weights=g.es['size'])
+                # NetworX
+                # parti = nxcom.best_partition(G,weight='weight', resolution=0.95)
+                # comList = parti.values()
+                # g = nxcom.modularity(parti, G, weight='weight')
+                # Igraph
+                community = g.community_multilevel(weights=g.es['size'], return_levels=False)
+                # print community
+                comList = community.membership
+                q = community.q
+                # for list in g.community_multilevel(weights=g.es['size'], return_levels=True):
+                #     print list
             elif (index == 1):
                 community = g.community_leading_eigenvector(weights=g.es['size'])
+                comList = community.membership
+                q = community.q
             elif (index == 2):
                 community = g.community_edge_betweenness(weights=g.es['size']).as_clustering()
+                comList = community.membership
+                q = community.q
             elif (index == 3):
                 community = g.community_label_propagation(weights=g.es['size'])
+                comList = community.membership
+                q = community.q
+
             t_fin = time.time()
-
             time_op = (t_fin - t_ini) * 1000
-
-            for ind in range(len(community.membership)):
-                #g.vs[ind]['group'] = "com"+str(community.membership[ind])
-                nodes[ind]['group'] = "com"+str(community.membership[ind])
-                #nodes[ind]['size'] = float(nodes[ind]["attributes"]["Grado"])
-            # print g.vs.get_attribute_values('color')
-
-            # print edges[0]
-
-            data = {"nodes": nodes, "edges": edges}
-            # print data["nodes"]
 
             # print db.networks.update_one(
             #     {'name': actualDB},
             #     {'$set': {'data': data}},
             #     upsert=True  # Create the file if not exits
             # )
-            return json.dumps({"comunidades": community.membership,
+            return json.dumps({"comunidades": comList,
                                "tiempo": round(time_op, 3),
-                                "modularidad": round(community.q, 3)
+                                "modularidad": round(q, 3)
             })
         else:
             return redirect(url_for('upload_file'))
