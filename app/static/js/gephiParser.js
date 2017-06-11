@@ -52,8 +52,10 @@ function parseGephi(gephiJSON, optionsObj) {
         node['id'] = gNode.id;
         node['attributes'] = gNode.attributes;
         node['title'] = gNode.title;
+        /* TODO: Dar opción al usuario para elegir si aplicar posicionamiento o no
         node['x'] = gNode.x;
         node['y'] = gNode.y;
+        */
         node['label'] = gNode.label.replace(/\"/g,'');
         node['title'] = gNode.attributes !== undefined ? gNode.attributes.title : undefined;
         if (gNode['group'] !== undefined)
