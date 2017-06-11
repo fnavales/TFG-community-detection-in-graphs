@@ -35,11 +35,49 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/comparative">Comparar</a>
                     </li>
+                    <li>
+                        <a class="nav-link" data-toggle="modal" data-target="#myModal" href="/">Subir Red</a>
+                    </li>
+                    <li class="dropdown">
+                            <a class="dropdown-toggle nav-link" data-toggle="dropdown" href="#" >Seleccionar Redes
+                            <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                {% if ds %}
+                                    {% for e in ds %}
+                                        <li>&nbsp&nbsp<a href="/setDB/{{e['name']|safe}}"> {{e["name"]|safe}} </a>&nbsp&nbsp</li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li> <p>Subir una red</p> </li>
+                                {% endif %}
+                            </ul>
+                    </li>
                 </ul>
-                <a href="load" class="btn btn-outline-success my-2 my-sm-0" role="button">Añadir Red</a>
             </div>
         </nav>
         <div class="top-buffer"></div>
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" role="dialog">
+            <div class="modal-dialog">
+              <!-- Modal content-->
+              <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form action="" method=post enctype=multipart/form-data>
+
+                        <div class="fileupload fileupload-new" data-provides="fileupload">
+                        <span class="btn btn-primary btn-file"><span class="fileupload-new">Elegir archivo</span>
+                        <span class="fileupload-exists">Cambiar</span>         <input type="file" name="file" /></span>
+                        <span class="fileupload-preview"></span>
+                        <a href="" class="close fileupload-exists" data-dismiss="fileupload" style="float: none">×</a>
+                            <span class="fileupload-exists"><input type=submit value=Subir></span>
+                        </div>
+                    </form>
+                </div>
+              </div>
+            </div>
+        </div>
         {% block body %}{% endblock %}
     </body>
 </html>

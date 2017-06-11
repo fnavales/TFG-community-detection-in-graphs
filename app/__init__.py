@@ -23,15 +23,23 @@ actualDB = None
 # Configurations
 app.config.from_object('config')
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def main():
+    datasets = None
+    if request.method == 'POST':
+        upload_file()
+        return redirect(url_for('main'))
+    else:
+        datasets = db.networks.find({},{"_id":0,"name":1})
 
     if (actualDB):
         data = db.networks.find_one({'name': actualDB})["data"]
     else:
-        return redirect(url_for('upload_file'))
+        data = None
+    #     return redirect(url_for('upload_file'))
 
-    return render_template("index.html", json = data)
+
+    return render_template("index.html", json = data, ds = datasets)
 
 
 def parseIgraphToNetworkx(ig):
