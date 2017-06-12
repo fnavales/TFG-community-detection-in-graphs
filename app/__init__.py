@@ -36,7 +36,6 @@ def main():
         data = db.networks.find_one({'name': actualDB})["data"]
     else:
         data = None
-    #     return redirect(url_for('upload_file'))
 
 
     return render_template("index.html", json = data, ds = datasets)
@@ -89,7 +88,7 @@ def listComparative():
             community = g.community_multilevel(weights=g.es['size'], return_levels=False)
             comList = community.membership
             q = community.q
-            name = "Lovaina"
+            name = "louvain"
             # for list in g.community_multilevel(weights=g.es['size'], return_levels=True):
             #     print list
         elif (i == 1):
@@ -132,6 +131,8 @@ def applyAlgDectCommunity(index):
             g = Graph.DictList(nodes, edges, directed=False, vertex_name_attr="id")     # Igraph
             G = parseIgraphToNetworkx(g)                                                # Networkx
 
+            comList = []
+            comDict = {}
             # Get the communities partition
             t_ini = time.time()
             if (index == 0):
@@ -140,18 +141,26 @@ def applyAlgDectCommunity(index):
                 # comList = parti.values()
                 # g = nxcom.modularity(parti, G, weight='weight')
                 # Igraph
-                community = g.community_multilevel(weights=g.es['size'], return_levels=False)
-                # print community
-                comList = community.membership
-                q = community.q
-                # for list in g.community_multilevel(weights=g.es['size'], return_levels=True):
-                #     print list
+                # community = g.community_multilevel(weights=g.es['size'], return_levels=False)
+                # comList = community.membership
+
+                # q = community.q
+
+                for ind, val in enumerate(g.community_multilevel(weights=g.es['size'], return_levels=True)):
+                    intervalo = (time.time() - t_ini)
+                    comDict["louvain"+str(ind)] = {
+                        "lista": val.membership,
+                        "tiempo": round(intervalo * 1000, 3),
+                        "mod": round(val.q, 3)
+                    }
+                    t_ini = time.time() - intervalo
+
             elif (index == 1):
                 community = g.community_leading_eigenvector(weights=g.es['size'])
                 comList = community.membership
                 q = community.q
             elif (index == 2):
-                community = g.community_edge_betweenness(weights=g.es['size']).as_clustering()
+                community = g.community_edge_betweenness(weights=g.es['size'], directed=False).as_clustering()
                 comList = community.membership
                 q = community.q
             elif (index == 3):
@@ -167,9 +176,12 @@ def applyAlgDectCommunity(index):
             #     {'$set': {'data': data}},
             #     upsert=True  # Create the file if not exits
             # )
-            return json.dumps({"comunidades": comList,
+            if (len(comDict) > 0):
+                return json.dumps(comDict)
+
+            return json.dumps({"lista": comList,
                                "tiempo": round(time_op, 3),
-                                "modularidad": round(q, 3)
+                                "mod": round(q, 3)
             })
         else:
             return redirect(url_for('upload_file'))

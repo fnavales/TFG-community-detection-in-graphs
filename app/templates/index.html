@@ -15,11 +15,27 @@
 
             <select class="custom-select" id="algGroup" onchange="updateIndex(value)" {% if not json %} disabled {% endif %}>
                 <option selected  value="-1" disabled>Algoritmos</option>
-                <option  value="0" > Lovaina                           </option>
+                <option  value="0" > louvain                           </option>
                 <option  value="1" > Greedy -> Newman                  </option>
                 <option  value="2" > Edge Betweenness -> Girvan-Newman </option>
                 <option  value="3" > Label Propagation                 </option>
             </select>
+            {% if json %}
+            <div>
+                <input type="radio" name="optradio" id="r1" checked><label for="r1" class="radio-inline">Option 1</label>
+                <input type="radio" name="optradio" id="r2"><label for="r2" class="radio-inline">Option 2</label>
+            </div>
+            <!--<span id="ex18-label-1" class="">Particiones</span><br>-->
+            <!--<input id="ex19" type="text"-->
+                  <!--data-provide="slider"-->
+                  <!--data-slider-ticks="[1, 2]"-->
+                  <!--data-slider-ticks-labels='["short", "medium"]'-->
+                  <!--data-slider-min="1"-->
+                  <!--data-slider-max="2"-->
+                  <!--data-slider-step="1"-->
+                  <!--data-slider-value="2"-->
+                  <!--data-slider-tooltip="hide" />-->
+            {% endif %}
             <div id="accordion" role="tablist" aria-multiselectable="true">
                 <div class="card">
                     <div class="card-header" role="tab" id="headingOne">
@@ -57,16 +73,18 @@
     </div>
 </div>
 
+<!-- JS BootStrap -->
+<script src="../static/js/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+<script src="../static/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+<script src="../static/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+
 <!-- JS Local-->
 <script type="text/javascript" src="../static/js/vis.min.js"></script>
 <script type="text/javascript" src="../static/js/vis-network.min.js"></script>
 <script type="text/javascript" src="../static/js/gephiParser.js"></script>
 <script type="text/javascript" src="../static/js/exampleUtil.js"></script>
+<script type="text/javascript" src="../static/js/bootstrap-slider.min.js"></script>
 
-<!-- JS BootStrap -->
-<script src="../static/js/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-<script src="../static/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-<script src="../static/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 
 <!-- Funciones de Dibujo -->
 {% if json %}
@@ -108,14 +126,32 @@
                 url : $SCRIPT_ROOT + '/apply_alg/'+value,
                 success : function(data) {
                     var networkData = JSON.parse(data);
-                    networkData["comunidades"].forEach(function (e,id) {
+//                    console.log(networkData);
+
+                    valuesa = Object.keys(networkData).map(function(key){
+                        return networkData[key];
+                    });
+                    console.log(valuesa);
+                    if (valuesa.length < 3) {
+                        $('label[for=r1]').html(valuesa[0].mod);
+                        $('label[for=r2]').html(valuesa[1].mod);
+                        if (document.getElementById('r1').checked) {
+                            networkData = valuesa[0];
+
+                        }else{
+                            networkData = valuesa[1];
+                        }
+
+                    }
+
+                    networkData["lista"].forEach(function (e,id) {
                         if(Object.keys(nodes._data)[0] == 1){
                             id +=1;
                         }
                         nodes.update([{id:id, group:parseInt(e)}]);
                     });
                     nodeContent.innerHTML = "Seleccione un nodo";
-                    setCommunityData(networkData.tiempo,networkData.modularidad);
+                    setCommunityData(networkData.tiempo,networkData.mod);
                     allNodes = nodes.get({returnType:"Object"});
                 }
             });
