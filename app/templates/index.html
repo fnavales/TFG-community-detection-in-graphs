@@ -3,40 +3,52 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-9" id="mynetwork">    </div>
+
         <div id="loadingBar">
+            {% if json %}
             <div class="outerBorder">
                 <div id="text">0%</div>
                 <div id="border">
                     <div id="bar"></div>
                 </div>
             </div>
+            {% else %}
+            <div class="networkText">
+                <button type="button" class="btn btn-primary" data-toggle="dropdown" data-target=".dropdown">Seleccionar Red</button>
+            </div>
+        {% endif %}
         </div>
         <div class="col-3">
 
             <select class="custom-select" id="algGroup" onchange="updateIndex(value)" {% if not json %} disabled {% endif %}>
                 <option selected  value="-1" disabled>Algoritmos</option>
-                <option  value="0" > louvain                           </option>
-                <option  value="1" > Greedy -> Newman                  </option>
-                <option  value="2" > Edge Betweenness -> Girvan-Newman </option>
-                <option  value="3" > Label Propagation                 </option>
+                <option  value="0" > Louvain                    </option>
+                <option  value="1" > Greedy Newman              </option>
+                <option  value="2" > Edge Betweenness           </option>
+                <option  value="3" > Label Propagation          </option>
+                <option  value="4" > Walktrap                   </option>
             </select>
-            {% if json %}
-            <div>
-                <input type="radio" name="optradio" id="r1" checked><label for="r1" class="radio-inline">Option 1</label>
-                <input type="radio" name="optradio" id="r2"><label for="r2" class="radio-inline">Option 2</label>
-            </div>
-            <!--<span id="ex18-label-1" class="">Particiones</span><br>-->
-            <!--<input id="ex19" type="text"-->
-                  <!--data-provide="slider"-->
-                  <!--data-slider-ticks="[1, 2]"-->
-                  <!--data-slider-ticks-labels='["short", "medium"]'-->
-                  <!--data-slider-min="1"-->
-                  <!--data-slider-max="2"-->
-                  <!--data-slider-step="1"-->
-                  <!--data-slider-value="2"-->
-                  <!--data-slider-tooltip="hide" />-->
-            {% endif %}
+
             <div id="accordion" role="tablist" aria-multiselectable="true">
+                <div class="card" id="parametrosDiv" style="display: none;">
+                    <div class="card-header" role="tab" id="headingThree">
+                        <h5 class="mb-0">
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+                                Parámetros
+                            </a>
+                        </h5>
+                    </div>
+
+                    <div id="collapseThree" class="collapse" role="tabpanel" aria-labelledby="headingThree">
+                        <div class="card-block">
+                            <form>
+                                <input onclick="changeLevel(1)" type="radio" name="optradio" id="r2" checked><label for="r2" class="radio-inline">Option 2</label>
+                                <input onclick="changeLevel(0)" type="radio" name="optradio" id="r1"><label for="r1" class="radio-inline">Option 1</label>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-header" role="tab" id="headingOne">
                         <h5 class="mb-0">
@@ -96,6 +108,7 @@
     var allNodes;
     var highlightActive = false;
     var communityChecked;
+    var communityList;
 
     /** Elementos Capturados **/
     var algGroup = document.getElementById('algGroup')
@@ -117,6 +130,22 @@
     nodes.add(parsed.nodes);
     edges.add(parsed.edges);
 
+    /** Permite cambiar niveles de corte en el dendograma (sólo para algunos algoritmos) **/
+    function changeLevel(id) {
+        if (communityList !== undefined) {
+            networkData = communityList[id];
+            networkData["lista"].forEach(function (e, id) {
+                if (Object.keys(nodes._data)[0] == 1) {
+                    id += 1;
+                }
+                nodes.update([{id: id, group: parseInt(e)}]);
+            });
+            nodeContent.innerHTML = "Seleccione un nodo";
+            setCommunityData(networkData.tiempo, networkData.mod);
+            allNodes = nodes.get({returnType: "Object"});
+        }
+    }
+
     /** Petición para calcular comunidades **/
     function updateIndex(value) {
 
@@ -133,15 +162,18 @@
                     });
                     console.log(valuesa);
                     if (valuesa.length < 3) {
+                        document.getElementById('parametrosDiv').style.display = "block";
                         $('label[for=r1]').html(valuesa[0].mod);
                         $('label[for=r2]').html(valuesa[1].mod);
+                        communityList = valuesa;
                         if (document.getElementById('r1').checked) {
                             networkData = valuesa[0];
 
                         }else{
                             networkData = valuesa[1];
                         }
-
+                    } else {
+                        document.getElementById('parametrosDiv').style.display = "none";
                     }
 
                     networkData["lista"].forEach(function (e,id) {
@@ -409,7 +441,7 @@
             var fuera = (valoresCom[key].out/total)*100;
 
             html += '<input class="myCheckbox" onchange="updateCheckedList('+index+')" type="checkbox" value="'+index+'" checked> <a style="cursor:pointer;" onclick="selectNodesFromColor('+index+')"><span style="background:' + this[key].color.background + '">&nbsp;&nbsp;</span> Comunidad '
-                + index + '</a><a href="#com' + index + '" data-toggle="collapse"><i class="material-icons">arrow_drop_down</i></a><div class="collapse" id="com' + index + '">' +
+                + (index+1) + '</a><a href="#com' + index + '" data-toggle="collapse"><i class="material-icons">arrow_drop_down</i></a><div class="collapse" id="com' + index + '">' +
                 '#N: ' + (nodes.get()).filter(function (el) {return el.group === index;}).length +  ', #E: ' + valoresCom[key].in + '<br>G<sub>in</sub>: ' + dentro.toPrecision(2) + '%, G<sub>out</sub>: ' + fuera.toPrecision(2) + '%' +
                 '</div><br>';
         }, colores);

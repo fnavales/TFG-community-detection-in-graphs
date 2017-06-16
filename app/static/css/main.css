@@ -30,6 +30,13 @@
     color: #000000;
 }
 
+div.networkText {
+    position: relative;
+    top: 50%;
+    width: 50%;
+    height: 44px;
+    margin: auto auto auto auto;
+}
 
 div.outerBorder {
     position:relative;

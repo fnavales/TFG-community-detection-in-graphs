@@ -153,7 +153,6 @@ def applyAlgDectCommunity(index):
                         "tiempo": round(intervalo * 1000, 3),
                         "mod": round(val.q, 3)
                     }
-                    t_ini = time.time() - intervalo
 
             elif (index == 1):
                 community = g.community_leading_eigenvector(weights=g.es['size'])
@@ -167,15 +166,14 @@ def applyAlgDectCommunity(index):
                 community = g.community_label_propagation(weights=g.es['size'])
                 comList = community.membership
                 q = community.q
+            elif (index == 4):
+                community = g.community_walktrap(weights=g.es['size']).as_clustering()
+                comList = community.membership
+                q = community.q
 
             t_fin = time.time()
             time_op = (t_fin - t_ini) * 1000
 
-            # print db.networks.update_one(
-            #     {'name': actualDB},
-            #     {'$set': {'data': data}},
-            #     upsert=True  # Create the file if not exits
-            # )
             if (len(comDict) > 0):
                 return json.dumps(comDict)
 
@@ -183,8 +181,8 @@ def applyAlgDectCommunity(index):
                                "tiempo": round(time_op, 3),
                                 "mod": round(q, 3)
             })
-        else:
-            return redirect(url_for('upload_file'))
+        # else:
+        #     return redirect(url_for('upload_file'))
 
 # Sample HTTP error handling
 @app.errorhandler(404)
@@ -203,21 +201,17 @@ def upload_file():
             print file
             save_file(file)
 
-            # file.save(os.path.join(APP_STATIC, filename))
-            # return redirect(url_for('uploaded_file', filename=filename))
             return redirect(url_for('main'))
-    else:
-        datasets = db.networks.find({},{"_id":0,"name":1})
-    return render_template("load_file.html", ds=datasets)
+    # else:
+    #     datasets = db.networks.find({},{"_id":0,"name":1})
+
 
 @app.route('/setDB/<filename>')
 def setDefaultDB(filename):
     global actualDB
     if ('.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS):
         actualDB = secure_filename(filename)
-        print actualDB
-        return redirect(url_for('main'))
-    return redirect(url_for('upload_file'))
+    return redirect(url_for('main'))
 
 def save_file(file):
     # Save network as a MongoDB file
