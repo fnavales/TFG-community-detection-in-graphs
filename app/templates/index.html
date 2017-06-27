@@ -2,8 +2,8 @@
 {% block body %}
 <div class="container">
     <div class="row fill">
-        <div class="col-9" id="mynetwork">    </div>
-        <div class="col-3">
+        <div class="col-md-9" id="mynetwork">    </div>
+        <div class="col-md-3">
 
             <select class="custom-select" id="algGroup" onchange="updateIndex(value)" {% if not json %} disabled {% endif %}>
                 <option selected  value="-1" disabled>Algoritmos</option>
@@ -28,6 +28,7 @@
                         <div class="card-block">
                             <form>
                                 <input onclick="changeLevel(1)" type="radio" name="optradio" id="r2" checked><label for="r2" class="radio-inline">Option 2</label>
+                                <br>
                                 <input onclick="changeLevel(0)" type="radio" name="optradio" id="r1"><label for="r1" class="radio-inline">Option 1</label>
                             </form>
                         </div>
@@ -154,7 +155,6 @@
                 url : $SCRIPT_ROOT + '/apply_alg/'+value,
                 success : function(data) {
                     var networkData = JSON.parse(data);
-//                    console.log(networkData);
 
                     valuesa = Object.keys(networkData).map(function(key){
                         return networkData[key];
@@ -162,8 +162,10 @@
                     console.log(valuesa);
                     if (valuesa.length < 3) {
                         document.getElementById('parametrosDiv').style.display = "block";
-                        $('label[for=r1]').html(valuesa[0].mod);
-                        $('label[for=r2]').html(valuesa[1].mod);
+//                        $('label[for=r1]').html(valuesa[0].mod);
+//                        $('label[for=r2]').html(valuesa[1].mod);
+                        $('label[for=r1]').html("&nbsp;Nivel 2");
+                        $('label[for=r2]').html("&nbsp;Nivel 1");
                         communityList = valuesa;
                         if (document.getElementById('r1').checked) {
                             networkData = valuesa[0];
@@ -344,6 +346,13 @@
             }
             highlightActive = false;
             $('.myCheckbox').prop('checked', true);
+
+            Object.keys(getCommunityColor()).forEach(function(element) {
+                if (communityChecked.indexOf(parseInt(element)) < 0 ){
+                    communityChecked.push(parseInt(element));
+                }
+            });
+            console.log(communityChecked);
         }
 
         // transform the object into an array
@@ -358,7 +367,7 @@
 
     function communityHighlight() {
         // if something is selected:
-        if (communityChecked.length > 0) {
+        if (communityChecked.length > -1) {
             var i,j;
 
             // mark all nodes as hard to read.

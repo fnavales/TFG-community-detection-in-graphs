@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block body %}
+<h1 class="text-center">Manual de Usuario</h1>
+<div style="margin-top:50px;"></div>
+<div class="row col-md-12 top-buffer">
+    <div class="col-md-8"><img width="100%" src="../static/images/ventanaPrincipal.png"></div>
+    <div class="col-md-4">
+        <h2>Ventana Principal</h2>
+        <hr/>
+        <ol>
+            <li>Opción que permite añadir una red desde un archivo local.</li>
+            <li>Opción que permite seleccionar entre las redes disponibles.</li>
+            <li>Opción que permite ir a la página de comparar.</li>
+            <li>Opción que permite ir a la página de ayuda.</li>
+            <li>Desplegable para seleccionar un algoritmo de detección de comunidades (Debe tener una red
+                seleccionada)
+            </li>
+            <li>Zona de representación de la red.</li>
+            <li>Zona dónde se muestran valores estadísticos referentes a las comunidades y los nodos.</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row col-md-12 top-buffer">
+    <div class="col-md-4">
+        <h2>Añadir Red</h2>
+        <hr/>
+        <ol>
+            <li>Pulsamos el botón.</li>
+            <li>Nos aparece un desplegable dónde podemos ver el archivo antes de añadirlo. Si pulsamos el botón "Elegir
+                Archivo" podemos seleccionar uno desde el explorador.
+            </li>
+            <li>Seleccionamos una red en formato *.json.</li>
+        </ol>
+    </div>
+    <div class="col-md-8"><img width="100%" src="../static/images/addRed.png"></div>
+</div>
+
+<div class="row col-md-12 top-buffer">
+    <div class="col-md-8"><img width="100%" src="../static/images/seleccionarRed.png"></div>
+    <div class="col-md-4">
+        <h2>Seleccionar Red</h2>
+        <hr/>
+        <ol>
+            <li>Pulsar sobre el botón y seleccionar la red de la lista desplegable.</li>
+            <li>Nos abre la lista desplegable.</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row col-md-12 top-buffer">
+    <div class="col-md-4">
+        <h2>SeleccionarAlgoritmo</h2>
+        <hr/>
+        <p>Pulsando sobre el desplegable del menú lateral podemos seleccionar entre los algoritmos implementados.</p>
+        <ul>
+            <li><a href="https://arxiv.org/abs/0803.0476" target="_blank">Lovain</a> </li>
+            <li><a href="https://arxiv.org/abs/cond-mat/0408187" target="_blank">Greedy Newman</a></li>
+            <li><a href="https://arxiv.org/abs/cond-mat/0112110" target="_blank">Edge betweenness</a></li>
+            <li><a href="https://arxiv.org/abs/0709.2938" target="_blank">Label Propagation</a></li>
+            <li><a href="https://arxiv.org/abs/physics/0512106" target="_blank">Walktrap</a></li>
+        </ul>
+        *Puedes consultar la literatura especializada de cada algoritmo pulsando en su nombre.
+    </div>
+    <div class="col-md-8"><img width="100%" src="../static/images/seleccionarAlgoritmo.png"></div>
+</div>
+
+<div class="row col-md-12 top-buffer">
+    <div class="col-md-8"><img width="100%" src="../static/images/comunidades.png"></div>
+    <div class="col-md-4">
+        <h2>Estadísticas de las Comunidades</h2>
+        <hr/>
+        <ol>
+            <li>Para comunidad disponemos de un checkbox que nos permite visualizar/ocultar dicha comunidad. Además si pulsamos sobre el color ó el texto nos realiza un foco sobre la red, teniendo como centro uno de sus nodos. Por último si pulsamos sobre la flecha nos aparecen estadísticas individuales.</li>
+            <li>Se tratan de número de nodos, número de enlaces entre nodos de la comunidad, grado de enlaces internos y grado de enlaces externos.</li>
+            <li>En la parte inferior encontramos valores referentes a los algoritmos.</li>
+        </ol>
+    </div>
+</div>
+
+
+<div class="row col-md-12 top-buffer">
+    <div class="col-md-4">
+        <h2>Estadísticas de los Nodos</h2>
+        <hr/>
+        <p>Si pulsamos sobre un nodo en primer lugar se nos destacan los vecinos de dicho nodo y también en el menú lateral nos cargan datos que almacena cada nodo. Entre ellos nos interesa el "value" que indica en grado del nodo, como también los grados de entrada y salida. </p>
+    </div>
+    <div class="col-md-8"><img width="100%" src="../static/images/metadatos.png"></div>
+</div>
+
+<div class="row col-md-12 top-buffer">
+    <div class="col-md-8"><img width="100%" src="../static/images/estudioComp.png"></div>
+    <div class="col-md-4">
+        <h2>Comparar Algortimos</h2>
+        <hr/>
+        <ol>
+            <li>Podemos seleccionar los algoritmos que deseamos comparar, mínimo deberíamos seleccionar dos de ellos para obtener los resultados deseados.</li>
+            <li>Seleccionar una de las redes disponibles sobre la que queremos aplicar los algoritmos.</li>
+            <li>Pulsando sobre el botón visualizamos las gráficas.</li>
+        </ol>
+    </div>
+</div>
+{% endblock %}

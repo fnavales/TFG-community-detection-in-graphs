@@ -7,7 +7,6 @@ from werkzeug import secure_filename
 from config import ALLOWED_EXTENSIONS, APP_STATIC
 import time
 import networkx
-import community as nxcom
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
@@ -53,17 +52,31 @@ def parseIgraphToNetworkx(ig):
     return G
 
 
-@app.route('/comparative')
+@app.route('/comparative', methods=['GET', 'POST'])
 def comparative():
-    listT, listC, listQ = listComparative()
+    datasets = db.networks.find({}, {"_id": 0, "name": 1})
+    dbNames = []
+    for d in datasets:
+        dbNames.append(d['name'])
 
-    return render_template("comparative.html", data = listT, data1 = listC, data2 = listQ)
+    if request.method == 'POST':
+        algInd =  [int(i) for i in request.form.getlist('algoritmos')]
+        bdName = request.form['bd']
+        listT, listC, listQ = listComparative(algInd, bdName)
+        return render_template("comparative.html", ds = dbNames, data = listT, data1 = listC, data2 = listQ)
 
-def listComparative():
+    return render_template("comparative.html", ds = dbNames)
+
+@app.route('/doc')
+def doc():
+    return render_template("doc.html")
+
+def listComparative(algInd, bdName):
     listT = []
     listC = []
     listQ = []
-    data = db.networks.find_one({'name': actualDB})["data"]
+
+    data = db.networks.find_one({'name': bdName})["data"]
 
     nodes = data['nodes']
     edges = data['edges']
@@ -74,25 +87,18 @@ def listComparative():
 
     # Create the graph
     g = Graph.DictList(nodes, edges, directed=False, vertex_name_attr="id")  # Igraph
-    G = parseIgraphToNetworkx(g)  # Networkx
 
-    for i in range(4):
+    for i in algInd:
         # Get the communities partition
         t_ini = time.time()
         if (i == 0):
-            # NetworX
-            # parti = nxcom.best_partition(G,weight='weight', resolution=0.95)
-            # comList = parti.values()
-            # g = nxcom.modularity(parti, G, weight='weight')
             # Igraph
             community = g.community_multilevel(weights=g.es['size'], return_levels=False)
             comList = community.membership
             q = community.q
-            name = "louvain"
-            # for list in g.community_multilevel(weights=g.es['size'], return_levels=True):
-            #     print list
+            name = "Louvain"
         elif (i == 1):
-            community = g.community_leading_eigenvector(weights=g.es['size'])
+            community = g.community_fastgreedy(weights=g.es['size']).as_clustering()
             comList = community.membership
             q = community.q
             name = "Greedy Newman"
@@ -106,12 +112,18 @@ def listComparative():
             comList = community.membership
             q = community.q
             name = "Label Propagation"
+        elif (i == 4):
+            community = g.community_walktrap(weights=g.es['size']).as_clustering()
+            comList = community.membership
+            q = community.q
+            name = "Walktrap"
 
         t_fin = time.time()
         time_op = (t_fin - t_ini) *1000
         listT.append([name,float(time_op)])
         listC.append([name,int(len(community))])
         listQ.append([name,community.q])
+        print listT, listC, listQ
     return listT, listC, listQ
 
 @app.route('/apply_alg/<int:index>', methods=['GET', 'POST'])
@@ -155,7 +167,8 @@ def applyAlgDectCommunity(index):
                     }
 
             elif (index == 1):
-                community = g.community_leading_eigenvector(weights=g.es['size'])
+                # community = g.community_leading_eigenvector(weights=g.es['size'])
+                community = g.community_fastgreedy(weights=g.es['size']).as_clustering()
                 comList = community.membership
                 q = community.q
             elif (index == 2):
