@@ -200,7 +200,7 @@ def applyAlgDectCommunity(index):
 # Sample HTTP error handling
 @app.errorhandler(404)
 def not_found(error):
-    return render_template('404.html'), 404
+    return redirect(url_for('main'))
 
 
 def allowed_file(filename):
