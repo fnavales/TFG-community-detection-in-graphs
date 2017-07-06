@@ -123,7 +123,6 @@ def listComparative(algInd, bdName):
         listT.append([name,float(time_op)])
         listC.append([name,int(len(community))])
         listQ.append([name,community.q])
-        print listT, listC, listQ
     return listT, listC, listQ
 
 @app.route('/apply_alg/<int:index>', methods=['GET', 'POST'])
@@ -211,7 +210,6 @@ def upload_file():
     if request.method == 'POST':
         file = request.files['file']
         if file and allowed_file(file.filename):
-            print file
             save_file(file)
 
             return redirect(url_for('main'))
