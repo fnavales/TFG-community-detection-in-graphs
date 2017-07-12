@@ -15,7 +15,8 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = APP_STATIC
 
 # Create mongo object
-client = pymongo.MongoClient()
+client = pymongo.MongoClient(os.environ['DB_PORT_27017_TCP_ADDR'],
+    27017)
 db = client.TFG
 actualDB = None
 
@@ -38,6 +39,7 @@ def main():
 
 
     return render_template("index.html", json = data, ds = datasets)
+    # return render_template("index.html", json = None, ds = None)
 
 
 def parseIgraphToNetworkx(ig):
@@ -235,6 +237,3 @@ def save_file(file):
     global actualDB
     if (added != None):
         actualDB = secure_filename(file.filename)
-
-
-
