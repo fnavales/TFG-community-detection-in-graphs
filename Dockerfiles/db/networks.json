@@ -2,7 +2,7 @@
   "_id": {
     "$oid": "5946dbab2de97ea4c506b894"
   },
-  "name": "Club_Karate.json",
+  "name": "ClubKarate.json",
   "data": {
     "nodes": [
       {
@@ -1012,7 +1012,7 @@
   "_id": {
     "$oid": "5948478cbe17c991b0551982"
   },
-  "name": "Red_Delfines.json",
+  "name": "RedDelfines.json",
   "data": {
     "nodes": [
       {
@@ -2978,7 +2978,7 @@
   "_id": {
     "$oid": "59484793be17c991b0551988"
   },
-  "name": "Los_Miserables.json",
+  "name": "LosMiserables.json",
   "data": {
     "nodes": [
       {
@@ -5946,7 +5946,7 @@
   "_id": {
     "$oid": "59484799be17c991b055198c"
   },
-  "name": "Juego_de_Tronos.json",
+  "name": "JuegoTronos.json",
   "data": {
     "nodes": [
       {
