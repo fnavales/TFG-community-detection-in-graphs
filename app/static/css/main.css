@@ -1,36 +1,15 @@
-
-.footer {
-
-    height:24px; // Replace with the height your footer should be
-    width: 100%; // Don't change
-    background-image: none;
-    background-repeat: repeat;
-    background-attachment: scroll;
-    background-position: 0% 0%;
-    position: fixed;
-    bottom: 0pt;
-    left: 0pt;
-
+.container{
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
 }
 
-hr {
-  height: 3px;
-  background-color: black;
+.row {
+    margin-right: 0px!important;
+    margin-left: 0px!important;
 }
 
-.footer_contents {
-
-    height:24px; // Replace with the height your footer should be
-    width: 1000px; // Visible width of footer
-    margin:auto;
-
-}
-/* Custom page CSS
--------------------------------------------------- */
-/* Not required for template or sticky footer method. */
-
-
-.container {
+#mynetwork {
     height: 85vh!important;
     width: 99vw!important;
 }
@@ -161,6 +140,33 @@ pre {
 
 .key {
     color: red;
+}
+
+.footer {
+
+    height:24px; // Replace with the height your footer should be
+    width: 100%; // Don't change
+    background-image: none;
+    background-repeat: repeat;
+    background-attachment: scroll;
+    background-position: 0% 0%;
+    position: fixed;
+    bottom: 0pt;
+    left: 0pt;
+
+}
+
+hr {
+  height: 3px;
+  background-color: black;
+}
+
+.footer_contents {
+
+    height:24px; // Replace with the height your footer should be
+    width: 1000px; // Visible width of footer
+    margin:auto;
+
 }
 
 .clearfix{*zoom:1;}.clearfix:before,.clearfix:after{display:table;content:"";line-height:0;}
