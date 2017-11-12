@@ -15,8 +15,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = APP_STATIC
 
 # Create mongo object
-client = pymongo.MongoClient(os.environ['DB_PORT_27017_TCP_ADDR'],
-    27017)
+client = pymongo.MongoClient(os.environ['DB_PORT_27017_TCP_ADDR'], 27017)
 db = client.TFG
 actualDB = None
 
@@ -39,7 +38,6 @@ def main():
 
 
     return render_template("index.html", json = data, ds = datasets)
-    # return render_template("index.html", json = None, ds = None)
 
 
 def parseIgraphToNetworkx(ig):
@@ -149,16 +147,6 @@ def applyAlgDectCommunity(index):
             # Get the communities partition
             t_ini = time.time()
             if (index == 0):
-                # NetworX
-                # parti = nxcom.best_partition(G,weight='weight', resolution=0.95)
-                # comList = parti.values()
-                # g = nxcom.modularity(parti, G, weight='weight')
-                # Igraph
-                # community = g.community_multilevel(weights=g.es['size'], return_levels=False)
-                # comList = community.membership
-
-                # q = community.q
-
                 for ind, val in enumerate(g.community_multilevel(weights=g.es['size'], return_levels=True)):
                     intervalo = (time.time() - t_ini)
                     comDict["louvain"+str(ind)] = {
@@ -168,7 +156,6 @@ def applyAlgDectCommunity(index):
                     }
 
             elif (index == 1):
-                # community = g.community_leading_eigenvector(weights=g.es['size'])
                 community = g.community_fastgreedy(weights=g.es['size']).as_clustering()
                 comList = community.membership
                 q = community.q
@@ -195,8 +182,6 @@ def applyAlgDectCommunity(index):
                                "tiempo": round(time_op, 3),
                                 "mod": round(q, 3)
             })
-        # else:
-        #     return redirect(url_for('upload_file'))
 
 # Sample HTTP error handling
 @app.errorhandler(404)
@@ -215,9 +200,6 @@ def upload_file():
             save_file(file)
 
             return redirect(url_for('main'))
-    # else:
-    #     datasets = db.networks.find({},{"_id":0,"name":1})
-
 
 @app.route('/setDB/<filename>')
 def setDefaultDB(filename):
