@@ -3,7 +3,7 @@ from flask import Flask, render_template, redirect, url_for, request, send_from_
 import json
 from igraph import *
 import pymongo
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 from config import ALLOWED_EXTENSIONS, APP_STATIC
 import time
 import networkx
@@ -14,8 +14,11 @@ current_milli_time = lambda: int(round(time.time() * 1000))
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = APP_STATIC
 
+print(os.environ)
 # Create mongo object
-client = pymongo.MongoClient(os.environ['DB_PORT_27017_TCP_ADDR'], 27017)
+# TODO: The problem here is that we need to set the correct database host (first argument), it's the IP of the DB container
+# client = pymongo.MongoClient(os.environ['DB_PORT_27017_TCP_ADDR'], 27017) 
+client = pymongo.MongoClient('mongodb://db:27017/')
 db = client.TFG
 actualDB = None
 

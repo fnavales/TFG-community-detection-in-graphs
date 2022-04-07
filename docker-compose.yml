@@ -1,20 +1,23 @@
-web:
-  build: Dockerfiles/web
-  command: python3 ./run.py
-  ports:
+services:
+  web:
+    build: Dockerfiles/web
+    command: python3 ./run.py
+    ports:
     - "8080:8080"
-  volumes:
+    volumes:
     - .:/code
-  links:
+    links:
     - db
 
-db:
-  image: mongo:3.4.4
-  volumes:
+  db:
+    image: mongo:latest
+    volumes:
     - ./Dockerfiles/db:/backup
+    ports:
+      - "27017:27017"
 
-mongo-seed:
-  build: Dockerfiles/db
-  links:
+  mongo-seed:
+    build: Dockerfiles/db
+    links:
     - db
 
